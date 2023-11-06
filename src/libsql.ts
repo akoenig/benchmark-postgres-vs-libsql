@@ -87,8 +87,6 @@ console.log("About to sync to local replica.");
 
 await database.sync();
 
-await new Promise((resolve) => setTimeout(resolve, 1000));
-
 //
 // Measure ...
 //
