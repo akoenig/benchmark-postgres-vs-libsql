@@ -37,6 +37,26 @@
           "store_path": "/nix/store/17g2kfxglsl3rncfasqrxqs2g3bjin3k-nodejs-20.9.0"
         }
       }
+    },
+    "turso-cli@0": {
+      "last_modified": "2023-10-25T20:49:13Z",
+      "resolved": "github:NixOS/nixpkgs/75a52265bda7fd25e06e3a67dee3f0354e73243c#turso-cli",
+      "source": "devbox-search",
+      "version": "0.86.3",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/whqk6sgz5lb6942mprz9l8d3c27mvadg-turso-cli-0.86.3"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/815fbmdfhgz9v1c6dyqbvfy3xw0q8cgv-turso-cli-0.86.3"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/f8jxkryyhzyk9q3n40bi0hxr5qj1mnvc-turso-cli-0.86.3"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/3lmbwl6v1fjz61xgvma3xl1qnmf2a8qc-turso-cli-0.86.3"
+        }
+      }
     }
   }
 }

@@ -1,24 +1,33 @@
 /**
- * Postgres read performance benchmark.
+ * libSQL read performance benchmark.
  *
  * @author André König <hi@andrekoenig.de>
  *
  */
 
-import postgres from "postgres";
+import { createClient } from "@libsql/client";
 
 import { duration } from "./utils";
 
-const POSTGRES_DATABASE_URL = Bun.env.POSTGRES_DATABASE_URL;
+const syncUrl = Bun.env.LIBSQL_DATABASE_URL;
+const authToken = Bun.env.LIBSQL_AUTH_TOKEN;
 
-if (!POSTGRES_DATABASE_URL) {
-	console.warn("Please define the POSTGRES_DATABASE_URL environment variable.");
+if (!syncUrl) {
+	console.warn("Please define the LIBSQL_DATABASE_URL environment variable.");
 
 	process.exit(1);
 }
 
-const sql = postgres(POSTGRES_DATABASE_URL, {
-	ssl: true,
+if (!authToken) {
+	console.warn("Please define the LIBSQL_AUTH_TOKEN environment variable.");
+
+	process.exit(1);
+}
+
+const database = createClient({
+	url: `file://${process.cwd()}/libsql.db`,
+	syncUrl,
+	authToken,
 });
 
 //
@@ -26,21 +35,21 @@ const sql = postgres(POSTGRES_DATABASE_URL, {
 //
 console.log("About to create the tables ...");
 
-await sql`
+await database.execute(`
   CREATE TABLE "user" (
     id TEXT PRIMARY KEY,
     username TEXT
   );
-`;
+`);
 
-await sql`
+await database.execute(`
   CREATE TABLE "user_profile" (
     id TEXT PRIMARY KEY,
     user_id TEXT REFERENCES "user"(id),
     first_name TEXT,
     last_name TEXT
   );
-`;
+`);
 
 const seed = Array.from({ length: 1000 }).map(() => ({
 	id: `${Bun.nanoseconds()}${Math.random()}`,
@@ -58,11 +67,27 @@ const seed = Array.from({ length: 1000 }).map(() => ({
 console.log("About to seed the database ...");
 
 for (const user of seed) {
-	await sql.begin(async (sql) => {
-		await sql`INSERT INTO "user" VALUES (${user.id}, ${user.username});`;
-		await sql`INSERT INTO "user_profile" VALUES (${user.profile.id}, ${user.id}, ${user.profile.firstName}, ${user.profile.lastName});`;
+	await database.execute({
+		sql: `INSERT INTO "user" VALUES (?, ?)`,
+		args: [user.id, user.username],
+	});
+
+	await database.execute({
+		sql: `INSERT INTO "user_profile" VALUES (?, ?, ?, ?)`,
+		args: [
+			user.profile.id,
+			user.id,
+			user.profile.firstName,
+			user.profile.lastName,
+		],
 	});
 }
+
+console.log("About to sync to local replica.");
+
+await database.sync();
+
+await new Promise((resolve) => setTimeout(resolve, 1000));
 
 //
 // Measure ...
@@ -73,7 +98,9 @@ console.log(`About to measure the performance with ${queryCount} queries ...`);
 const start = Bun.nanoseconds();
 
 for (let i = 0; i < queryCount; i++) {
-	await sql`SELECT u.username, p.first_name FROM "user" u JOIN "user_profile" as p ON u.id = p.user_id`;
+	await database.execute(
+		"SELECT u.username, p.first_name FROM user u JOIN user_profile as p ON u.id = p.user_id",
+	);
 }
 
 const delta = (Bun.nanoseconds() - start) / 1000;
@@ -82,4 +109,4 @@ console.log(
 	`took ${duration(delta)}, ${duration(delta / queryCount)} per query`,
 );
 
-await sql.end();
+await database.close();

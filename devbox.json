@@ -1,7 +1,8 @@
 {
   "packages": [
     "bun@1",
-    "nodejs@20"
+    "nodejs@20",
+    "turso-cli@0"
   ],
   "shell": {
     "init_hook": [
