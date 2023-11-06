@@ -104,7 +104,9 @@ for (let i = 0; i < queryCount; i++) {
 const delta = (Bun.nanoseconds() - start) / 1000;
 
 console.log(
-	`took ${duration(delta)}, ${duration(delta / queryCount)} per query`,
+	`[libSQL] The whole benchmark took ${duration(delta)}, ${duration(
+		delta / queryCount,
+	)} per query`,
 );
 
 await database.close();
